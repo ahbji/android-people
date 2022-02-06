@@ -143,6 +143,12 @@ class NotificationHelper(private val context: Context) {
                         icon
                     )
                     .setDesiredHeightResId(R.dimen.bubble_height)
+                    .apply {
+                        if (fromUser) {
+                            setAutoExpandBubble(true)
+                            setSuppressNotification(true)
+                        }
+                    }
                     .build()
             )
             .setContentTitle(chat.contact.name)
