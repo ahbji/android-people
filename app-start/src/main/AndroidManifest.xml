@@ -61,7 +61,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
-            <!-- TODO 3: This activity handles our dynamic shortcuts. -->
+            <meta-data
+                android:name="android.app.shotcuts"
+                android:resource="@xml/shortcuts"/>
         </activity>
 
         <!--

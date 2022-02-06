@@ -77,7 +77,44 @@ class NotificationHelper(private val context: Context) {
 
     @WorkerThread
     fun updateShortcuts(importantContact: Contact?) {
-        // TODO 2: Create dynamic shortcuts.
+        var shortcuts = Contact.CONTACTS.map { contact ->
+            val icon = Icon.createWithAdaptiveBitmap(
+                context.resources.assets.open(contact.icon).use { input ->
+                    BitmapFactory.decodeStream(input)
+                }
+            )
+            ShortcutInfo.Builder(context, contact.shortcutId)
+                .setLocusId(LocusId(contact.shortcutId))
+                .setActivity(ComponentName(context, MainActivity::class.java))
+                .setShortLabel(contact.name)
+                .setIcon(icon)
+                .setLongLived(true)
+                .setCategories(setOf("com.example.android.bubbles.category.TEXT_SHARE_TARGET"))
+                .setIntent(
+                    Intent(context, MainActivity::class.java)
+                        .setAction(Intent.ACTION_VIEW)
+                        .setData(
+                            Uri.parse(
+                                "https://android.example.com/chat/${contact.id}"
+                            )
+                        )
+                )
+                .setPerson(
+                    Person.Builder()
+                        .setName(contact.name)
+                        .setIcon(icon)
+                        .build()
+                )
+                .build()
+        }
+        if (importantContact != null) {
+            shortcuts = shortcuts.sortedByDescending { it.id == importantContact.shortcutId }
+        }
+        val maxCount = shortcutManager.maxShortcutCountPerActivity
+        if (shortcuts.size > maxCount) {
+            shortcuts = shortcuts.take(maxCount)
+        }
+        shortcutManager.addDynamicShortcuts(shortcuts)
     }
 
     @WorkerThread
@@ -95,7 +132,9 @@ class NotificationHelper(private val context: Context) {
             // notification works as a normal notification as well.
             .setContentTitle(chat.contact.name)
             .setSmallIcon(R.drawable.ic_message)
-            // TODO 4: Associate the notification with a shortcut.
+            .setCategory(Notification.CATEGORY_MESSAGE)
+            .setShortcutId(chat.contact.shortcutId)
+            .setLocusId(LocusId(chat.contact.shortcutId))
             .addPerson(person)
             .setShowWhen(true)
             // The content Intent is used when the user clicks on the "Open Content" icon button on
